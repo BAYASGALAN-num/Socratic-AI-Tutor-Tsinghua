@@ -27,7 +27,14 @@
         <header class="header">
 
             <div class="logo">
-                <div class="logo-icon">✦</div>
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" />
+                        <path d="M20 2v4" />
+                        <path d="M22 4h-4" />
+                        <circle cx="4" cy="20" r="2" />
+                    </svg>
+                </div>
 
                 <div>
                     <h1>Socratic<span>AI</span></h1>
@@ -46,6 +53,46 @@
         </header>
 
 
+        <!-- Roadmap progress stepper -->
+
+        <div class="roadmap-progress" id="roadmapProgress">
+
+            <div class="stage" data-stage="0">
+                <span class="stage-dot"></span>
+                <span class="stage-label">Understand</span>
+            </div>
+
+            <div class="stage-line"></div>
+
+            <div class="stage" data-stage="1">
+                <span class="stage-dot"></span>
+                <span class="stage-label">Explore</span>
+            </div>
+
+            <div class="stage-line"></div>
+
+            <div class="stage" data-stage="2">
+                <span class="stage-dot"></span>
+                <span class="stage-label">Reason</span>
+            </div>
+
+            <div class="stage-line"></div>
+
+            <div class="stage" data-stage="3">
+                <span class="stage-dot"></span>
+                <span class="stage-label">Refine</span>
+            </div>
+
+            <div class="stage-line"></div>
+
+            <div class="stage" data-stage="4">
+                <span class="stage-dot"></span>
+                <span class="stage-label">Insight</span>
+            </div>
+
+        </div>
+
+
         <!-- Main content -->
 
         <section class="workspace">
@@ -53,7 +100,7 @@
 
             <!-- Problem section -->
 
-            <div class="section">
+            <div class="section" id="problemSection">
 
                 <div class="section-title">
 
@@ -81,8 +128,13 @@
 
                     <div class="input-footer">
 
-                        <span>
-                            💡 Describe the problem clearly
+                        <span class="footer-hint">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+                                <path d="M9 18h6" />
+                                <path d="M10 22h4" />
+                            </svg>
+                            Describe the problem clearly
                         </span>
 
                         <span id="problemCount">
@@ -94,24 +146,45 @@
                 </div>
 
 
-                <button
-                    class="primary-button"
-                    onclick="startLearning()"
-                >
+                <div class="problem-actions">
 
-                    <span>Start Learning</span>
+                    <button
+                        class="primary-button"
+                        id="startButton"
+                        onclick="startLearning()"
+                    >
 
-                    <span class="arrow">
-                        →
-                    </span>
+                        <span>Start Learning</span>
 
-                </button>
+                        <span class="arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14" />
+                                <path d="m12 5 7 7-7 7" />
+                            </svg>
+                        </span>
+
+                    </button>
+
+                    <button
+                        class="text-button"
+                        id="newProblemButton"
+                        onclick="resetSession()"
+                        hidden
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                            <path d="M3 3v5h5" />
+                        </svg>
+                        New problem
+                    </button>
+
+                </div>
 
             </div>
 
 
 
-            <!-- AI Tutor -->
+            <!-- AI Tutor roadmap -->
 
             <div
                 class="tutor-card"
@@ -144,43 +217,33 @@
                 </div>
 
 
-                <div
-                    class="ai-message"
-                    id="aiMessage"
-                >
-                    <span class="welcome-icon">
-                        👋
-                    </span>
+                <div class="roadmap" id="roadmap">
 
-                    <div>
+                    <div class="roadmap-empty" id="roadmapEmpty">
 
-                        <strong>
-                            Let's learn together.
-                        </strong>
+                        <span class="welcome-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" />
+                            </svg>
+                        </span>
 
-                        <p>
-                            Enter a problem above and I'll guide you
-                            step-by-step with questions instead of simply
-                            giving you the answer.
-                        </p>
+                        <div>
+
+                            <strong>
+                                Let's learn together.
+                            </strong>
+
+                            <p>
+                                Enter a problem above and I'll guide you
+                                step-by-step with questions instead of simply
+                                giving you the answer. Your journey builds here
+                                as a roadmap, one step at a time.
+                            </p>
+
+                        </div>
 
                     </div>
-
-                </div>
-
-
-                <div
-                    class="thinking"
-                    id="thinking"
-                >
-
-                    <span></span>
-                    <span></span>
-                    <span></span>
-
-                    <label>
-                        Thinking...
-                    </label>
 
                 </div>
 
@@ -190,7 +253,7 @@
 
             <!-- Student response -->
 
-            <div class="section response-section">
+            <div class="section response-section" id="responseSection" hidden>
 
                 <div class="section-title">
 
@@ -222,8 +285,18 @@
 
                     <div class="input-footer">
 
-                        <span>
-                            🧠 Explain your thinking
+                        <span class="footer-hint">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 18V5" />
+                                <path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4" />
+                                <path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5" />
+                                <path d="M17.997 5.125a4 4 0 0 1 2.526 5.77" />
+                                <path d="M18 18a4 4 0 0 0 2-7.464" />
+                                <path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517" />
+                                <path d="M6 18a4 4 0 0 1-2-7.464" />
+                                <path d="M6.003 5.125a4 4 0 0 0-2.526 5.77" />
+                            </svg>
+                            Explain your thinking
                         </span>
 
                         <span id="responseCount">
@@ -246,8 +319,11 @@
                             Submit reasoning
                         </span>
 
-                        <span>
-                            →
+                        <span class="arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+                                <path d="m21.854 2.147-10.94 10.939" />
+                            </svg>
                         </span>
 
                     </button>
@@ -259,7 +335,11 @@
                     >
 
                         <span class="bulb">
-                            💡
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+                                <path d="M9 18h6" />
+                                <path d="M10 22h4" />
+                            </svg>
                         </span>
 
                         I'm stuck

@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const { GoogleGenAI } = require("@google/genai");
+const Anthropic = require("@anthropic-ai/sdk");
 
 dotenv.config();
 
@@ -10,60 +10,74 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY
+const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY
 });
 
+
+const SYSTEM_PROMPT = `
+    You are a Socratic AI Tutor guiding a student through a problem
+    over multiple turns, building on everything said so far.
+
+    Rules:
+
+    1. Never immediately give the final answer.
+    2. Ask guiding questions.
+    3. Give small hints.
+    4. Encourage the student to explain their reasoning.
+    5. If the student's reasoning is wrong,
+    gently guide them.
+    6. Never shame or criticize the student.
+    7. Keep responses clear and concise.
+    8. Build on the conversation so far instead of repeating
+    earlier questions or restarting the explanation.
+    9. Write like you're speaking to the student, not formatting
+    a document. Never use LaTeX or Markdown syntax of any kind:
+    no $...$ or $$...$$ math delimiters, no \\(...\\) or \\[...\\],
+    no **bold**, no backticks, no # headings. Say numbers and
+    equations the way you'd say them out loud, e.g. "20 divided
+    by 5 gives you 4" instead of "$20 \\div 5 = 4$".
+`;
 
 app.post("/api/ask", async (req, res) => {
 
     try {
 
-        const { type, problem, studentResponse } = req.body;
+        const { type, problem, studentResponse, history } = req.body;
 
-        let userMessage = "";
+        let turnInstruction = "";
 
 
         // Student starts a new problem
         if (type === "start") {
 
-            userMessage = `
-The student has entered this problem:
+            turnInstruction = `
+                The student wants to work through this problem:
 
-${problem}
+                ${problem}
 
-Start a Socratic tutoring session.
+                Start the Socratic session. Ask one useful guiding
+                question that helps the student identify the
+                important information in the problem.
 
-Do NOT give the final answer.
-
-Ask one useful guiding question that helps
-the student identify the important information
-in the problem.
-`;
+                Do NOT give the final answer.
+            `;
 
         }
-
 
         // Student submits reasoning
         else if (type === "submit") {
 
-            userMessage = `
-Problem:
+            turnInstruction = `
+                The student's latest reasoning:
 
-${problem}
+                ${studentResponse}
 
-Student's reasoning:
+                Evaluate it and ask one guiding question that helps
+                the student take the next step.
 
-${studentResponse}
-
-Act as a Socratic tutor.
-
-Do not give the final answer immediately.
-
-Evaluate the student's reasoning and ask
-one guiding question that helps the student
-take the next step.
-`;
+                Do not give the final answer yet.
+                `;
 
         }
 
@@ -71,52 +85,57 @@ take the next step.
         // Student asks for a hint
         else if (type === "hint") {
 
-            userMessage = `
-Problem:
+            turnInstruction = `
+                The student is stuck and asks for a hint.
 
-${problem}
+                Give a small hint that helps the student
+                think about the next step.
 
-The student is stuck.
-
-Give a small hint that helps the student
-think about the next step.
-
-Do NOT give the final answer.
-`;
+                Do NOT give the final answer.
+                `;
 
         }
 
 
-        const response = await ai.models.generateContent({
+        const messages = [
 
-            model: "gemini-3.7-flash",
+            ...(Array.isArray(history) ? history : []).map((turn) => ({
+                role: turn.role === "assistant" ? "assistant" : "user",
+                content: String(turn.text ?? "")
+            })),
 
-            contents: `
-You are a Socratic AI Tutor.
+            {
+                role: "user",
+                content: turnInstruction
+            }
 
-Your job is to help students learn by thinking.
+        ];
 
-Rules:
 
-1. Never immediately give the final answer.
-2. Ask guiding questions.
-3. Give small hints.
-4. Encourage the student to explain their reasoning.
-5. If the student's reasoning is wrong,
-   gently guide them.
-6. Never shame or criticize the student.
-7. Keep responses clear and concise.
+        const response = await anthropic.messages.create({
 
-Student request:
+            model: "claude-opus-5",
 
-${userMessage}
-`
+            max_tokens: 4096,
+
+            system: SYSTEM_PROMPT,
+
+            thinking: { type: "adaptive" },
+
+            messages
 
         });
 
 
+        const answer = response.content
+            .filter((block) => block.type === "text")
+            .map((block) => block.text)
+            .join("\n")
+            .trim();
+
+
         res.json({
-            answer: response.text
+            answer
         });
 
 
@@ -136,7 +155,7 @@ ${userMessage}
 app.listen(3000, () => {
 
     console.log(
-        "Gemini Socratic AI Tutor running on http://localhost:3000"
+        "Claude Socratic AI Tutor running on http://localhost:3000"
     );
 
 });
