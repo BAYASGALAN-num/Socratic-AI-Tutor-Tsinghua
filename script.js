@@ -33,6 +33,24 @@ responseInput.addEventListener("input", () => {
     responseCount.innerText = `${responseInput.value.length} characters`;
 });
 
+function toggleTheme() {
+
+    const root = document.documentElement;
+
+    const stored = root.getAttribute("data-theme");
+
+    const systemPrefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+
+    const current = stored || (systemPrefersLight ? "light" : "dark");
+
+    const next = current === "light" ? "dark" : "light";
+
+    root.setAttribute("data-theme", next);
+
+    localStorage.setItem("theme", next);
+
+}
+
 function renderStage() {
 
     document.querySelectorAll(".stage").forEach((el) => {

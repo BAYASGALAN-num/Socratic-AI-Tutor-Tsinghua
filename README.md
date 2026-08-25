@@ -2,7 +2,7 @@
 
 A small web app that helps students learn by reasoning through a problem instead of getting handed the answer. You enter a problem, the AI asks a guiding question, you explain your thinking, and it nudges you toward the next step — Socratic-style.
 
-Powered by Anthropic's Claude API (`claude-opus-5`) via the `@anthropic-ai/sdk` SDK.
+Powered by Anthropic's Claude API (`claude-haiku-4-5`) via the `@anthropic-ai/sdk` SDK.
 
 ## How it works
 

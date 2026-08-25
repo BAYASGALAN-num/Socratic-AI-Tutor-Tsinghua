@@ -114,13 +114,11 @@ app.post("/api/ask", async (req, res) => {
 
         const response = await anthropic.messages.create({
 
-            model: "claude-opus-5",
+            model: "claude-haiku-4-5",
 
             max_tokens: 4096,
 
             system: SYSTEM_PROMPT,
-
-            thinking: { type: "adaptive" },
 
             messages
 
