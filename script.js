@@ -1,29 +1,46 @@
 const STAGE_LABELS = ["Understand", "Explore", "Reason", "Refine", "Insight"];
 
 const ICONS = {
-    sparkles: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" /><path d="M20 2v4" /><path d="M22 4h-4" /><circle cx="4" cy="20" r="2" /></svg>`,
-
-    fileText: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></svg>`,
-
-    brain: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18V5" /><path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4" /><path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5" /><path d="M17.997 5.125a4 4 0 0 1 2.526 5.77" /><path d="M18 18a4 4 0 0 0 2-7.464" /><path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517" /><path d="M6 18a4 4 0 0 1-2-7.464" /><path d="M6.003 5.125a4 4 0 0 0-2.526 5.77" /></svg>`,
-
-    lightbulb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /><path d="M9 18h6" /><path d="M10 22h4" /></svg>`,
-
-    alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>`
+    question: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>`,
+    bulb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
+    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+    ai: "✦",
+    student: "You"
 };
+
+/* =========================
+   STATE
+========================= */
 
 let history = [];
 let stage = 0;
-let stepNumber = 0;
+let sessionActive = false;
+let userScrolledUp = false;
+
+/* =========================
+   DOM ELEMENTS
+========================= */
 
 const problemInput = document.getElementById("problem");
 const responseInput = document.getElementById("studentResponse");
 const problemCount = document.getElementById("problemCount");
 const responseCount = document.getElementById("responseCount");
-const roadmap = document.getElementById("roadmap");
-const responseSection = document.getElementById("responseSection");
+
+const chatScroll = document.getElementById("chatScroll");
+const messagesEl = document.getElementById("messages");
+const starter = document.getElementById("starter");
+
+const composer = document.getElementById("composer");
+const sendButton = document.getElementById("sendButton");
+const stuckButton = document.getElementById("stuckButton");
+const answerButton = document.getElementById("answerButton");
 const startButton = document.getElementById("startButton");
 const newProblemButton = document.getElementById("newProblemButton");
+const newMessagePill = document.getElementById("newMessagePill");
+
+/* =========================
+   CHARACTER COUNTERS + AUTOGROW
+========================= */
 
 problemInput.addEventListener("input", () => {
     problemCount.innerText = `${problemInput.value.length} characters`;
@@ -31,333 +48,727 @@ problemInput.addEventListener("input", () => {
 
 responseInput.addEventListener("input", () => {
     responseCount.innerText = `${responseInput.value.length} characters`;
+    responseInput.style.height = "auto";
+    responseInput.style.height = Math.min(responseInput.scrollHeight, 160) + "px";
 });
 
-function toggleTheme() {
+responseInput.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        submitAnswer();
+    }
+});
 
-    const root = document.documentElement;
+/* =========================
+   SCROLL HANDLING
+========================= */
 
-    const stored = root.getAttribute("data-theme");
+chatScroll.addEventListener("scroll", () => {
+    const distanceFromBottom =
+        chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight;
 
-    const systemPrefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+    userScrolledUp = distanceFromBottom > 120;
 
-    const current = stored || (systemPrefersLight ? "light" : "dark");
+    if (!userScrolledUp) {
+        newMessagePill.hidden = true;
+    }
+});
 
-    const next = current === "light" ? "dark" : "light";
-
-    root.setAttribute("data-theme", next);
-
-    localStorage.setItem("theme", next);
-
-}
-
-function renderStage() {
-
-    document.querySelectorAll(".stage").forEach((el) => {
-
-        const i = Number(el.dataset.stage);
-
-        el.classList.toggle("active", i === stage);
-        el.classList.toggle("done", i < stage);
-
-    });
-
-}
-
-function advanceStage() {
-
-    stage = Math.min(stage + 1, STAGE_LABELS.length - 1);
-
-    renderStage();
-
-}
-
-function escapeHtml(text) {
-
-    const div = document.createElement("div");
-
-    div.innerText = text;
-
-    return div.innerHTML;
-
-}
-
-function addNode(kind, icon, role, bodyHtml, countStep = true) {
-
-    const empty = document.getElementById("roadmapEmpty");
-
-    if (empty) empty.remove();
-
-    const stepBadge = countStep
-        ? `<span class="node-step">Step ${++stepNumber}</span>`
-        : "";
-
-    const node = document.createElement("div");
-
-    node.className = `roadmap-node node-${kind}`;
-
-    node.innerHTML = `
-        <div class="node-rail">
-            <div class="node-dot">${icon}</div>
-        </div>
-        <div class="node-card">
-            <div class="node-meta">
-                <span class="node-role">${role}</span>
-                ${stepBadge}
-            </div>
-            <div class="node-body">${bodyHtml}</div>
-        </div>
-    `;
-
-    roadmap.appendChild(node);
-
-    node.scrollIntoView({ behavior: "smooth", block: "end" });
-
-    return node;
-
-}
-
-function addThinking(label) {
-
-    return addNode(
-        "thinking",
-        ICONS.sparkles,
-        "Socratic AI",
-        `<div class="thinking-dots"><span></span><span></span><span></span><label>${label}</label></div>`,
-        false
-    );
-
-}
-
-function addErrorNode(message) {
-
-    return addNode(
-        "error",
-        ICONS.alert,
-        "Socratic AI",
-        `<p>${escapeHtml(message)}</p>`
-    );
-
-}
-
-async function callTutor(payload) {
-
-    const result = await fetch(
-        "http://localhost:3000/api/ask",
-        {
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                ...payload,
-                history
-            })
-        }
-    );
-
-    return result.json();
-
-}
-
-async function startLearning() {
-
-    const problem = problemInput.value.trim();
-
-    if (problem === "") {
-
-        alert("Please enter a problem.");
-
+function scrollChatToBottom(force = false) {
+    if (userScrolledUp && !force) {
+        newMessagePill.hidden = false;
         return;
     }
 
-    problemInput.readOnly = true;
-    startButton.disabled = true;
-    newProblemButton.hidden = false;
+    newMessagePill.hidden = true;
+    userScrolledUp = false;
 
-    addNode("problem", ICONS.fileText, "Your problem", `<p>${escapeHtml(problem)}</p>`);
+    requestAnimationFrame(() => {
+        chatScroll.scrollTo({ top: chatScroll.scrollHeight, behavior: "smooth" });
+    });
+}
 
-    const thinkingNode = addThinking("Reading your problem...");
+/* =========================
+   THEME
+========================= */
+
+function toggleTheme() {
+    const root = document.documentElement;
+    const stored = root.getAttribute("data-theme");
+    const systemPrefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+    const current = stored || (systemPrefersLight ? "light" : "dark");
+    const next = current === "light" ? "dark" : "light";
+
+    root.setAttribute("data-theme", next);
+    localStorage.setItem("theme", next);
+}
+
+/* =========================
+   STAGE LOGIC
+========================= */
+
+function updateStage(newStage) {
+    stage = Math.max(0, Math.min(newStage, STAGE_LABELS.length - 1));
+    renderStage();
+}
+
+function advanceStage() {
+    updateStage(stage + 1);
+}
+
+function renderStage() {
+    document.querySelectorAll(".stage-item").forEach((el) => {
+        const i = Number(el.dataset.stage);
+        el.classList.toggle("active", i === stage);
+        el.classList.toggle("done", i < stage);
+    });
+}
+
+/* =========================
+   SECURITY
+========================= */
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.innerText = String(text ?? "");
+    return div.innerHTML;
+}
+
+/* =========================
+   MESSAGE RENDERERS
+========================= */
+
+function ensureStarterHidden() {
+    if (!starter.hidden) {
+        starter.hidden = true;
+    }
+}
+
+function appendEl(el) {
+    messagesEl.appendChild(el);
+    scrollChatToBottom();
+    return el;
+}
+
+function renderUserMessage(text) {
+    ensureStarterHidden();
+
+    const el = document.createElement("div");
+    el.className = "msg student";
+    el.innerHTML = `
+        <div class="msg-avatar">${ICONS.student}</div>
+        <div class="msg-body">
+            <span class="msg-label">You</span>
+            <div class="msg-bubble">${escapeHtml(text)}</div>
+        </div>
+    `;
+    return appendEl(el);
+}
+
+function renderProblemMessage(text) {
+    ensureStarterHidden();
+
+    const el = document.createElement("div");
+    el.className = "msg problem";
+    el.innerHTML = `
+        <div class="msg-avatar">📘</div>
+        <div class="msg-body">
+            <span class="msg-label">Your problem</span>
+            <div class="msg-bubble">${escapeHtml(text)}</div>
+        </div>
+    `;
+    return appendEl(el);
+}
+
+function renderAIMessage(text) {
+    ensureStarterHidden();
+
+    const el = document.createElement("div");
+    el.className = "msg ai";
+    el.innerHTML = `
+        <div class="msg-avatar">${ICONS.ai}</div>
+        <div class="msg-body">
+            <span class="msg-label">Socratic AI</span>
+            <div class="msg-bubble">${escapeHtml(text)}</div>
+        </div>
+    `;
+    return appendEl(el);
+}
+
+function renderSocraticQuestion(text) {
+    ensureStarterHidden();
+
+    const el = document.createElement("div");
+    el.className = "msg ai";
+    el.innerHTML = `
+        <div class="msg-avatar">${ICONS.ai}</div>
+        <div class="msg-body">
+            <span class="msg-label">Socratic AI</span>
+            <div class="socratic-card">
+                <div class="socratic-eyebrow">${ICONS.question} SOCRATIC QUESTION</div>
+                <div class="socratic-question-text">${escapeHtml(text)}</div>
+                <div class="socratic-subtext">Think before you answer.</div>
+            </div>
+        </div>
+    `;
+    return appendEl(el);
+}
+
+function renderHintCard(text) {
+    ensureStarterHidden();
+
+    const el = document.createElement("div");
+    el.className = "msg ai";
+    el.innerHTML = `
+        <div class="msg-avatar">${ICONS.ai}</div>
+        <div class="msg-body">
+            <span class="msg-label">Socratic AI</span>
+            <div class="hint-card">
+                <div class="hint-eyebrow">${ICONS.bulb} HINT</div>
+                <div class="hint-text">${escapeHtml(text)}</div>
+            </div>
+        </div>
+    `;
+    return appendEl(el);
+}
+
+function renderAnswerCard(text) {
+    ensureStarterHidden();
+
+    const el = document.createElement("div");
+    el.className = "msg ai";
+    el.innerHTML = `
+        <div class="msg-avatar">${ICONS.ai}</div>
+        <div class="msg-body" style="max-width: 100%;">
+            <span class="msg-label">Socratic AI</span>
+            <div class="answer-card">
+                <div class="answer-header">
+                    <span class="answer-icon">${ICONS.check}</span>
+                    <span class="answer-title">ANSWER REVEALED</span>
+                </div>
+                <div class="answer-text">${escapeHtml(text)}</div>
+            </div>
+        </div>
+    `;
+    return appendEl(el);
+}
+
+function renderSuccessCard(text) {
+    ensureStarterHidden();
+
+    const el = document.createElement("div");
+    el.className = "success-card";
+    el.innerHTML = `
+        <div class="success-icon">✓</div>
+        <div class="success-title">EXCELLENT WORK!</div>
+        <div class="success-message">${escapeHtml(text)}</div>
+        <div class="success-subtitle">🎉 You solved this through your own reasoning.</div>
+    `;
+    messagesEl.appendChild(el);
+    celebrate();
+    scrollChatToBottom(true);
+    return el;
+}
+
+function renderNewProblemCTA() {
+    const el = document.createElement("div");
+    el.className = "next-problem-cta";
+    el.innerHTML = `
+        <p>Ready for another challenge?</p>
+        <button class="primary-button" onclick="resetSession()">
+            <span>Start a New Problem</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+            </svg>
+        </button>
+    `;
+    return appendEl(el);
+}
+
+function renderErrorMessage(text) {
+    ensureStarterHidden();
+
+    const el = document.createElement("div");
+    el.className = "msg error";
+    el.innerHTML = `
+        <div class="msg-avatar">!</div>
+        <div class="msg-body">
+            <span class="msg-label">Socratic AI</span>
+            <div class="msg-bubble">${escapeHtml(text)}</div>
+        </div>
+    `;
+    return appendEl(el);
+}
+
+function showTypingIndicator(label) {
+    ensureStarterHidden();
+
+    const el = document.createElement("div");
+    el.className = "msg ai typing";
+    el.innerHTML = `
+        <div class="msg-avatar">${ICONS.ai}</div>
+        <div class="msg-body">
+            <span class="msg-label">Socratic AI</span>
+            <div class="thinking-row">
+                <span class="thinking-dots"><span></span><span></span><span></span></span>
+                <span class="thinking-label">${escapeHtml(label)}</span>
+            </div>
+        </div>
+    `;
+    return appendEl(el);
+}
+
+function hideTypingIndicator(node) {
+    if (node) node.remove();
+}
+
+/* =========================
+   CELEBRATION: confetti + sparkles + chime
+========================= */
+
+function celebrate() {
+    launchConfetti();
+    launchSparkles();
+    playChime();
+}
+
+function launchConfetti() {
+    const container = document.createElement("div");
+    container.className = "confetti-container";
+
+    const colors = ["#34d399", "#22d3ee", "#8b5cf6", "#facc15", "#6366f1", "#f472b6"];
+    const pieces = 90;
+
+    for (let i = 0; i < pieces; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti";
+
+        const fromLeft = i % 2 === 0;
+        piece.style.left = fromLeft
+            ? `${Math.random() * 25}%`
+            : `${75 + Math.random() * 25}%`;
+
+        piece.style.animationDelay = `${Math.random() * 0.7}s`;
+        piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+        const size = 6 + Math.random() * 8;
+        piece.style.width = `${size}px`;
+        piece.style.height = `${size * 1.6}px`;
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+        container.appendChild(piece);
+    }
+
+    document.body.appendChild(container);
+    setTimeout(() => container.remove(), 4200);
+}
+
+function launchSparkles() {
+    const container = document.createElement("div");
+    container.className = "sparkle-container";
+
+    const count = 22;
+
+    for (let i = 0; i < count; i++) {
+        const spark = document.createElement("span");
+        spark.className = "sparkle";
+        spark.textContent = "✦";
+
+        const angle = (360 / count) * i + (Math.random() * 20 - 10);
+        const distance = 90 + Math.random() * 140;
+        const dx = Math.cos((angle * Math.PI) / 180) * distance;
+        const dy = Math.sin((angle * Math.PI) / 180) * distance;
+
+        spark.style.setProperty("--dx", `${dx}px`);
+        spark.style.setProperty("--dy", `${dy}px`);
+        spark.style.left = "50%";
+        spark.style.top = "38%";
+        spark.style.fontSize = `${10 + Math.random() * 14}px`;
+        spark.style.animationDelay = `${Math.random() * 0.25}s`;
+
+        const hues = ["#facc15", "#34d399", "#22d3ee", "#a78bfa"];
+        spark.style.color = hues[Math.floor(Math.random() * hues.length)];
+
+        container.appendChild(spark);
+    }
+
+    document.body.appendChild(container);
+    setTimeout(() => container.remove(), 1600);
+}
+
+let audioCtx = null;
+
+function playChime() {
+    try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+
+        // A gentle ascending three-note chime, synthesized — no audio file needed.
+        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+        const startTime = audioCtx.currentTime;
+
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.value = freq;
+
+            const noteStart = startTime + i * 0.13;
+            const noteEnd = noteStart + 0.5;
+
+            gain.gain.setValueAtTime(0, noteStart);
+            gain.gain.linearRampToValueAtTime(0.14, noteStart + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, noteEnd);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(noteStart);
+            osc.stop(noteEnd + 0.05);
+        });
+    } catch (error) {
+        // Audio isn't critical to the learning flow — fail silently.
+        console.warn("Could not play celebration sound:", error);
+    }
+}
+
+/* =========================
+   BACKEND CALL
+========================= */
+
+async function callTutor(payload) {
+    let result;
 
     try {
+        result = await fetch("http://localhost:3000/api/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, history })
+        });
+    } catch (networkError) {
+        // The fetch itself failed — the server likely isn't running at all.
+        throw new Error(
+            "NETWORK: Could not reach the AI server at localhost:3000. Is it running?"
+        );
+    }
 
+    let data = null;
+
+    try {
+        data = await result.json();
+    } catch (parseError) {
+        // Response wasn't valid JSON.
+        throw new Error(`SERVER: Got an unreadable response (status ${result.status}).`);
+    }
+
+    if (!result.ok) {
+        // The server responded, but with an error — surface its real message
+        // instead of pretending it was a connection problem.
+        const reason = data && data.error ? data.error : `HTTP ${result.status}`;
+        throw new Error(`SERVER: ${reason}`);
+    }
+
+    return data;
+}
+
+function friendlyErrorText(error) {
+    const message = error && error.message ? error.message : String(error);
+
+    if (message.startsWith("NETWORK:")) {
+        return message.replace("NETWORK:", "").trim();
+    }
+
+    if (message.startsWith("SERVER:")) {
+        return `The AI server responded with an error: ${message.replace("SERVER:", "").trim()}`;
+    }
+
+    return "Something went wrong talking to the AI server.";
+}
+
+function setComposerDisabled(disabled) {
+    responseInput.disabled = disabled;
+    sendButton.disabled = disabled;
+    stuckButton.disabled = disabled;
+    answerButton.disabled = disabled;
+}
+
+/* =========================
+   PARSE + RENDER A GUIDING/LABELED RESPONSE
+   mode: "normal" | "hint"
+========================= */
+
+function renderLabeledResponse(rawAnswer, mode) {
+    const answer = String(rawAnswer ?? "").trim();
+
+    if (answer.startsWith("EXCELLENT_WORK")) {
+        const clean = answer.replace("EXCELLENT_WORK", "").trim();
+        renderSuccessCard(clean);
+        updateStage(STAGE_LABELS.length - 1);
+        composer.hidden = true;
+        renderNewProblemCTA();
+        return "excellent";
+    }
+
+    if (answer.startsWith("ANSWER_REVEALED")) {
+        const clean = answer.replace("ANSWER_REVEALED", "").trim();
+        renderAnswerCard(clean);
+        updateStage(STAGE_LABELS.length - 1);
+        composer.hidden = true;
+        renderNewProblemCTA();
+        return "answer";
+    }
+
+    if (answer.startsWith("GUIDING")) {
+        const clean = answer.replace("GUIDING", "").trim();
+
+        if (mode === "hint") {
+            renderHintCard(clean);
+        } else {
+            renderSocraticQuestion(clean);
+            advanceStage();
+        }
+
+        return "guiding";
+    }
+
+    // Fallback: no recognized label, just show as plain AI text
+    renderAIMessage(answer);
+    return "unknown";
+}
+
+/* =========================
+   START LEARNING
+========================= */
+
+async function startLearning() {
+    const problem = problemInput.value.trim();
+
+    if (problem === "") {
+        problemInput.focus();
+        return;
+    }
+
+    startButton.disabled = true;
+    problemInput.readOnly = true;
+
+    renderProblemMessage(problem);
+
+    const typingNode = showTypingIndicator("Reading your problem...");
+
+    try {
         const data = await callTutor({ type: "start", problem });
 
-        thinkingNode.remove();
+        hideTypingIndicator(typingNode);
 
         if (data.error) {
-
-            addErrorNode(`${data.error} Please try again.`);
-
-            problemInput.readOnly = false;
+            renderErrorMessage(`${data.error} Please try again.`);
             startButton.disabled = false;
-
+            problemInput.readOnly = false;
             return;
         }
 
         history.push({ role: "user", text: `Problem: ${problem}` });
         history.push({ role: "assistant", text: data.answer });
 
-        addNode("ai", ICONS.sparkles, "Socratic AI", `<p>${escapeHtml(data.answer)}</p>`);
+        sessionActive = true;
+        composer.hidden = false;
+        newProblemButton.hidden = false;
 
-        advanceStage();
-
-        responseSection.hidden = false;
+        renderLabeledResponse(data.answer, "normal");
 
         responseInput.focus();
-
     } catch (error) {
-
         console.error(error);
-
-        thinkingNode.remove();
-
-        addErrorNode("Could not connect to the AI server. Please try again.");
-
-        problemInput.readOnly = false;
+        hideTypingIndicator(typingNode);
+        renderErrorMessage(friendlyErrorText(error));
         startButton.disabled = false;
-
+        problemInput.readOnly = false;
     }
-
 }
 
+/* =========================
+   SUBMIT STUDENT REASONING
+========================= */
+
 async function submitAnswer() {
+    if (!sessionActive) return;
 
     const problem = problemInput.value.trim();
     const studentResponse = responseInput.value.trim();
 
     if (studentResponse === "") {
-
-        alert("Please explain your thinking.");
-
+        responseInput.focus();
         return;
     }
 
-    addNode("student", ICONS.brain, "You", `<p>${escapeHtml(studentResponse)}</p>`);
+    renderUserMessage(studentResponse);
 
     responseInput.value = "";
+    responseInput.style.height = "auto";
     responseCount.innerText = "0 characters";
 
-    const thinkingNode = addThinking("Reviewing your reasoning...");
+    setComposerDisabled(true);
+    const typingNode = showTypingIndicator("Reviewing your reasoning...");
 
     try {
-
         const data = await callTutor({ type: "submit", problem, studentResponse });
 
-        thinkingNode.remove();
+        hideTypingIndicator(typingNode);
+        setComposerDisabled(false);
 
         if (data.error) {
-
-            addErrorNode(data.error);
-
+            renderErrorMessage(data.error);
             return;
         }
 
         history.push({ role: "user", text: `My reasoning: ${studentResponse}` });
         history.push({ role: "assistant", text: data.answer });
 
-        addNode("ai", ICONS.sparkles, "Socratic AI", `<p>${escapeHtml(data.answer)}</p>`);
+        renderLabeledResponse(data.answer, "normal");
 
-        advanceStage();
-
+        if (!composer.hidden) {
+            responseInput.focus();
+        }
     } catch (error) {
-
         console.error(error);
-
-        thinkingNode.remove();
-
-        addErrorNode("Could not connect to the AI server.");
-
+        hideTypingIndicator(typingNode);
+        setComposerDisabled(false);
+        renderErrorMessage(friendlyErrorText(error));
     }
-
 }
 
+/* =========================
+   GET HINT ("I'm Stuck")
+========================= */
+
 async function getHint() {
+    if (!sessionActive) return;
 
     const problem = problemInput.value.trim();
 
-    if (problem === "") {
-
-        alert("Please enter a problem first.");
-
-        return;
-    }
-
-    const thinkingNode = addThinking("Finding a helpful hint...");
+    setComposerDisabled(true);
+    const typingNode = showTypingIndicator("Finding a helpful hint...");
 
     try {
-
         const data = await callTutor({ type: "hint", problem });
 
-        thinkingNode.remove();
+        hideTypingIndicator(typingNode);
+        setComposerDisabled(false);
 
         if (data.error) {
-
-            addErrorNode(data.error);
-
+            renderErrorMessage(data.error);
             return;
         }
 
         history.push({ role: "user", text: "(asked for a hint)" });
         history.push({ role: "assistant", text: data.answer });
 
-        addNode("hint", ICONS.lightbulb, "Hint", `<p>${escapeHtml(data.answer)}</p>`);
+        renderLabeledResponse(data.answer, "hint");
 
+        if (!composer.hidden) {
+            responseInput.focus();
+        }
     } catch (error) {
-
         console.error(error);
-
-        thinkingNode.remove();
-
-        addErrorNode("Could not connect to the AI server.");
-
+        hideTypingIndicator(typingNode);
+        setComposerDisabled(false);
+        renderErrorMessage(friendlyErrorText(error));
     }
+}
 
+/* =========================
+   REVEAL ANSWER ("Answer" button)
+========================= */
+
+async function revealAnswer() {
+    if (!sessionActive) return;
+
+    const problem = problemInput.value.trim();
+
+    setComposerDisabled(true);
+    const typingNode = showTypingIndicator("Preparing the answer...");
+
+    try {
+        const data = await callTutor({ type: "answer", problem });
+
+        hideTypingIndicator(typingNode);
+        setComposerDisabled(false);
+
+        if (data.error) {
+            renderErrorMessage(data.error);
+            return;
+        }
+
+        history.push({ role: "user", text: "(requested the final answer)" });
+        history.push({ role: "assistant", text: data.answer });
+
+        const answer = String(data.answer ?? "").trim();
+
+        if (answer.startsWith("ANSWER_REVEALED")) {
+            renderAnswerCard(answer.replace("ANSWER_REVEALED", "").trim());
+        } else {
+            // Safety net in case the backend ever returns a different label
+            renderLabeledResponse(answer, "hint");
+        }
+
+        updateStage(STAGE_LABELS.length - 1);
+        composer.hidden = true;
+        renderNewProblemCTA();
+    } catch (error) {
+        console.error(error);
+        hideTypingIndicator(typingNode);
+        setComposerDisabled(false);
+        renderErrorMessage(friendlyErrorText(error));
+    }
+}
+
+/* =========================
+   RESET SESSION
+========================= */
+
+function confirmNewProblem() {
+    if (sessionActive && composer.hidden === false) {
+        const sure = window.confirm(
+            "Start a new problem? Your current conversation will be cleared."
+        );
+        if (!sure) return;
+    }
+    resetSession();
 }
 
 function resetSession() {
-
     history = [];
     stage = 0;
-    stepNumber = 0;
+    sessionActive = false;
+    userScrolledUp = false;
 
     problemInput.value = "";
     problemInput.readOnly = false;
     problemCount.innerText = "0 characters";
 
     responseInput.value = "";
+    responseInput.style.height = "auto";
     responseCount.innerText = "0 characters";
-    responseSection.hidden = true;
+
+    setComposerDisabled(false);
+    composer.hidden = true;
+    newProblemButton.hidden = true;
+    newMessagePill.hidden = true;
 
     startButton.disabled = false;
-    newProblemButton.hidden = true;
 
-    roadmap.innerHTML = `
-        <div class="roadmap-empty" id="roadmapEmpty">
-            <span class="welcome-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" />
-                </svg>
-            </span>
-            <div>
-                <strong>Let's learn together.</strong>
-                <p>
-                    Enter a problem above and I'll guide you
-                    step-by-step with questions instead of simply
-                    giving you the answer. Your journey builds here
-                    as a roadmap, one step at a time.
-                </p>
-            </div>
-        </div>
-    `;
+    messagesEl.innerHTML = "";
+    starter.hidden = false;
 
     renderStage();
-
     problemInput.focus();
-
 }
 
+/* =========================
+   INITIALIZE
+========================= */
+
+composer.hidden = true;
+newProblemButton.hidden = true;
 renderStage();

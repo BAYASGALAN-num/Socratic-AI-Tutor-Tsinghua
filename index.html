@@ -29,11 +29,9 @@
         <div class="orb orb-3"></div>
     </div>
 
+    <div class="app-shell">
 
-    <main class="container">
-
-        <!-- Header -->
-
+        <!-- ============ HEADER ============ -->
         <header class="header">
 
             <div class="logo">
@@ -46,24 +44,15 @@
                     </svg>
                 </div>
 
-                <div>
+                <div class="logo-text">
                     <h1>Socratic<span>AI</span></h1>
-
-                    <p>
-                        Learn by thinking, not by copying.
-                    </p>
+                    <p>Learn by thinking, not by memorizing.</p>
                 </div>
             </div>
 
             <div class="header-actions">
 
-                <button
-                    class="theme-toggle"
-                    id="themeToggle"
-                    onclick="toggleTheme()"
-                    aria-label="Toggle light and dark mode"
-                >
-
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle light and dark mode">
                     <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="4" />
                         <path d="M12 2v2" />
@@ -75,340 +64,182 @@
                         <path d="m6.34 17.66-1.41 1.41" />
                         <path d="m19.07 4.93-1.41 1.41" />
                     </svg>
-
                     <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
                     </svg>
-
                 </button>
 
-                <div class="status">
-                    <span class="status-dot"></span>
-                    AI Tutor Online
-                </div>
+                <button class="new-problem-button" id="newProblemButton" onclick="confirmNewProblem()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                    </svg>
+                    <span>New Problem</span>
+                </button>
 
             </div>
 
         </header>
 
+        <!-- ============ ONE UNIFIED LEARNING PANEL ============ -->
+        <!-- Stage bar + chat + composer all live inside a single panel,   -->
+        <!-- not three separate floating cards.                            -->
+        <main class="learning-panel">
 
-        <!-- Roadmap progress stepper -->
+            <!-- Sticky 5-stage progress (top strip of the panel) -->
+            <nav class="stage-bar" id="stageBar" aria-label="Learning progress">
 
-        <div class="roadmap-progress" id="roadmapProgress">
-
-            <div class="stage" data-stage="0">
-                <span class="stage-dot"></span>
-                <span class="stage-label">Understand</span>
-            </div>
-
-            <div class="stage-line"></div>
-
-            <div class="stage" data-stage="1">
-                <span class="stage-dot"></span>
-                <span class="stage-label">Explore</span>
-            </div>
-
-            <div class="stage-line"></div>
-
-            <div class="stage" data-stage="2">
-                <span class="stage-dot"></span>
-                <span class="stage-label">Reason</span>
-            </div>
-
-            <div class="stage-line"></div>
-
-            <div class="stage" data-stage="3">
-                <span class="stage-dot"></span>
-                <span class="stage-label">Refine</span>
-            </div>
-
-            <div class="stage-line"></div>
-
-            <div class="stage" data-stage="4">
-                <span class="stage-dot"></span>
-                <span class="stage-label">Insight</span>
-            </div>
-
-        </div>
-
-
-        <!-- Main content -->
-
-        <section class="workspace">
-
-
-            <!-- Problem section -->
-
-            <div class="section" id="problemSection">
-
-                <div class="section-title">
-
-                    <div class="number">
-                        01
+                <div class="stage-item" data-stage="0">
+                    <div class="stage-node">
+                        <span class="stage-number">01</span>
+                        <svg class="stage-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                     </div>
-
-                    <div>
-                        <h2>What's your problem?</h2>
-
-                        <p>
-                            Enter a question or problem you'd like to understand.
-                        </p>
-                    </div>
-
+                    <span class="stage-name">Understand</span>
                 </div>
 
+                <div class="stage-connector"><span></span></div>
 
-                <div class="input-wrapper">
-
-                    <textarea
-                        id="problem"
-                        placeholder="Example: A car accelerates from 0 to 20 m/s in 5 seconds. Find the acceleration."
-                    ></textarea>
-
-                    <div class="input-footer">
-
-                        <span class="footer-hint">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
-                                <path d="M9 18h6" />
-                                <path d="M10 22h4" />
-                            </svg>
-                            Describe the problem clearly
-                        </span>
-
-                        <span id="problemCount">
-                            0 characters
-                        </span>
-
+                <div class="stage-item" data-stage="1">
+                    <div class="stage-node">
+                        <span class="stage-number">02</span>
+                        <svg class="stage-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                     </div>
-
+                    <span class="stage-name">Explore</span>
                 </div>
 
+                <div class="stage-connector"><span></span></div>
 
-                <div class="problem-actions">
-
-                    <button
-                        class="primary-button"
-                        id="startButton"
-                        onclick="startLearning()"
-                    >
-
-                        <span>Start Learning</span>
-
-                        <span class="arrow">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M5 12h14" />
-                                <path d="m12 5 7 7-7 7" />
-                            </svg>
-                        </span>
-
-                    </button>
-
-                    <button
-                        class="text-button"
-                        id="newProblemButton"
-                        onclick="resetSession()"
-                        hidden
-                    >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                            <path d="M3 3v5h5" />
-                        </svg>
-                        New problem
-                    </button>
-
+                <div class="stage-item" data-stage="2">
+                    <div class="stage-node">
+                        <span class="stage-number">03</span>
+                        <svg class="stage-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                    </div>
+                    <span class="stage-name">Reason</span>
                 </div>
 
-            </div>
+                <div class="stage-connector"><span></span></div>
 
-
-
-            <!-- AI Tutor roadmap -->
-
-            <div
-                class="tutor-card"
-                id="tutorCard"
-            >
-
-                <div class="tutor-header">
-
-                    <div class="ai-avatar">
-
-                        <div class="ai-core">
-                            ✦
-                        </div>
-
+                <div class="stage-item" data-stage="3">
+                    <div class="stage-node">
+                        <span class="stage-number">04</span>
+                        <svg class="stage-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                     </div>
-
-                    <div>
-
-                        <div class="ai-title">
-                            Socratic AI
-                        </div>
-
-                        <div class="ai-status">
-                            <span></span>
-                            Your thinking partner
-                        </div>
-
-                    </div>
-
+                    <span class="stage-name">Refine</span>
                 </div>
 
+                <div class="stage-connector"><span></span></div>
 
-                <div class="roadmap" id="roadmap">
+                <div class="stage-item" data-stage="4">
+                    <div class="stage-node">
+                        <span class="stage-number">05</span>
+                        <svg class="stage-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                    </div>
+                    <span class="stage-name">Insight</span>
+                </div>
 
-                    <div class="roadmap-empty" id="roadmapEmpty">
+            </nav>
 
-                        <span class="welcome-icon">
+            <!-- Chat scroll region (middle of the same panel) -->
+            <div class="chat-area">
+            <div class="chat-scroll" id="chatScroll">
+                <div class="chat-inner" id="chatInner">
+
+                    <!-- Empty state / problem starter -->
+                    <div class="starter" id="starter">
+
+                        <div class="starter-badge">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="10" />
                                 <path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" />
                             </svg>
-                        </span>
+                        </div>
 
-                        <div>
+                        <h2>What are you trying to figure out?</h2>
+                        <p>Bring a problem, and I'll guide you to the answer with questions&nbsp;— not hand it to you.</p>
 
-                            <strong>
-                                Let's learn together.
-                            </strong>
+                        <div class="starter-input-wrapper">
+                            <textarea id="problem" rows="3" placeholder="Example: A car accelerates from 0 to 20 m/s in 5 seconds. Find the acceleration."></textarea>
 
-                            <p>
-                                Enter a problem above and I'll guide you
-                                step-by-step with questions instead of simply
-                                giving you the answer. Your journey builds here
-                                as a roadmap, one step at a time.
-                            </p>
-
+                            <div class="starter-input-footer">
+                                <span id="problemCount">0 characters</span>
+                                <button class="primary-button" id="startButton" onclick="startLearning()">
+                                    <span>Start Learning</span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14" />
+                                        <path d="m12 5 7 7-7 7" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                     </div>
 
-                </div>
+                    <!-- Messages get appended here -->
+                    <div class="messages" id="messages"></div>
 
+                </div>
             </div>
 
+            <!-- New message pill -->
+            <button class="new-message-pill" id="newMessagePill" onclick="scrollChatToBottom(true)" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg>
+                New message
+            </button>
+            </div>
 
+            <!-- ============ COMPOSER (bottom section of the same panel) ============ -->
+            <div class="composer" id="composer" hidden>
 
-            <!-- Student response -->
+                <div class="composer-inner">
 
-            <div class="section response-section" id="responseSection" hidden>
-
-                <div class="section-title">
-
-                    <div class="number">
-                        02
+                    <div class="composer-box">
+                        <textarea id="studentResponse" rows="1" placeholder="Explain your reasoning..."></textarea>
                     </div>
 
-                    <div>
+                    <div class="composer-actions">
 
-                        <h2>
-                            Your reasoning
-                        </h2>
+                        <div class="composer-actions-left">
+                            <button class="stuck-button" id="stuckButton" onclick="getHint()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+                                    <path d="M9 18h6" />
+                                    <path d="M10 22h4" />
+                                </svg>
+                                I'm Stuck
+                            </button>
 
-                        <p>
-                            Don't worry about being wrong. Explain how you think.
-                        </p>
+                            <button class="answer-button" id="answerButton" onclick="revealAnswer()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 17h.01" />
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                    <circle cx="12" cy="12" r="10" />
+                                </svg>
+                                Answer
+                            </button>
+                        </div>
 
-                    </div>
-
-                </div>
-
-
-                <div class="input-wrapper">
-
-                    <textarea
-                        id="studentResponse"
-                        placeholder="Type your reasoning here..."
-                    ></textarea>
-
-                    <div class="input-footer">
-
-                        <span class="footer-hint">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 18V5" />
-                                <path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4" />
-                                <path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5" />
-                                <path d="M17.997 5.125a4 4 0 0 1 2.526 5.77" />
-                                <path d="M18 18a4 4 0 0 0 2-7.464" />
-                                <path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517" />
-                                <path d="M6 18a4 4 0 0 1-2-7.464" />
-                                <path d="M6.003 5.125a4 4 0 0 0-2.526 5.77" />
-                            </svg>
-                            Explain your thinking
-                        </span>
-
-                        <span id="responseCount">
-                            0 characters
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-                <div class="action-buttons">
-
-                    <button
-                        class="submit-button"
-                        onclick="submitAnswer()"
-                    >
-
-                        <span>
-                            Submit reasoning
-                        </span>
-
-                        <span class="arrow">
+                        <button class="send-button" id="sendButton" onclick="submitAnswer()">
+                            Send
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
                                 <path d="m21.854 2.147-10.94 10.939" />
                             </svg>
-                        </span>
+                        </button>
 
-                    </button>
+                    </div>
 
-
-                    <button
-                        class="hint-button"
-                        onclick="getHint()"
-                    >
-
-                        <span class="bulb">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
-                                <path d="M9 18h6" />
-                                <path d="M10 22h4" />
-                            </svg>
-                        </span>
-
-                        I'm stuck
-
-                    </button>
+                    <div class="composer-hint">
+                        <span id="responseCount">0 characters</span>
+                        <span class="composer-shortcut">⌘/Ctrl + Enter to send</span>
+                    </div>
 
                 </div>
 
             </div>
 
+        </main>
 
-        </section>
-
-
-        <!-- Footer -->
-
-        <footer>
-
-            <span>
-                Socratic AI Tutor
-            </span>
-
-            <span>
-                Built for learning through reasoning
-            </span>
-
-        </footer>
-
-    </main>
-
+    </div>
 
     <script src="script.js"></script>
 
