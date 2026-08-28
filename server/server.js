@@ -10,123 +10,205 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+// ==================================================
+// API KEY
+// ==================================================
+
+if (!process.env.ANTHROPIC_API_KEY) {
+    console.error(
+        "Missing ANTHROPIC_API_KEY in .env file."
+    );
+    process.exit(1);
+}
+
+
 const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY
 });
 
 
+// ==================================================
+// CONFIG
+// ==================================================
+
+const MODEL = "claude-haiku-4-5-20251001";
+const MAX_TOKENS = 300;
+
+const MAX_WRONG_ATTEMPTS = 3;
+
+
+// ==================================================
+// SYSTEM PROMPT
+// ==================================================
+
 const SYSTEM_PROMPT = `
 You are a friendly Socratic AI Tutor.
 
-Your goal is to help students learn through reasoning, but you must NOT force
-the student through endless questions.
+Your purpose is to help students learn through reasoning instead of
+immediately giving them the answer.
 
-IMPORTANT RESPONSE FORMAT:
+The tutoring process follows this exact flow:
 
-You MUST begin every response with exactly ONE of these three labels:
+START
+→ GUIDE
+→ STUDENT ANSWERS
+→ CORRECT → REVIEW → STOP
+→ WRONG → COUNT ATTEMPT
+→ if attempts < 3 → GUIDE AGAIN
+→ if attempts >= 3 → ENCOURAGE HINT / ANSWER
+→ HINT → GUIDE
+→ ANSWER → REVEAL → STOP
 
+
+==================================================
+RESPONSE TYPES
+==================================================
+
+Every response must begin with exactly ONE of:
+
+GUIDING
 EXCELLENT_WORK
 ANSWER_REVEALED
-GUIDING
 
-Use the labels exactly as written.
 
------------------------------------
-WHEN TO USE EXCELLENT_WORK
------------------------------------
+==================================================
+1. GUIDING
+==================================================
 
-Use EXCELLENT_WORK when the student's latest answer or reasoning is correct
-and they have reached the correct final answer.
+Use GUIDING when the student still needs help.
+
+Normally, GUIDING should contain ONE Socratic question.
+
+If the student has made 1 or 2 wrong attempts:
+
+- Do not reveal the final answer.
+- Briefly acknowledge the mistake.
+- Help the student identify what went wrong.
+- Ask ONE useful Socratic question.
+- Do not repeat a previous question.
+
+
+==================================================
+2. EXCELLENT_WORK
+==================================================
+
+Use EXCELLENT_WORK when the student's latest answer is correct.
 
 When using EXCELLENT_WORK:
 
-- Congratulate the student.
-- Clearly state that their answer is correct.
-- State their correct answer.
-- Give ONE short explanation of why it is correct.
-- DO NOT ask another question.
-- DO NOT continue the Socratic process.
+- Tell the student their answer is correct.
+- State the correct answer.
+- Give one short explanation.
+- Encourage the student.
+- Do NOT ask another question.
+- STOP.
 
-Example:
 
-EXCELLENT_WORK
-Great job! Your answer is correct. The fourth test score is 100 because 340 minus the first three scores, 70 + 80 + 90, equals 100.
+==================================================
+3. ANSWER_REVEALED
+==================================================
 
------------------------------------
-WHEN TO USE ANSWER_REVEALED
------------------------------------
+Use ANSWER_REVEALED only when:
 
-Use ANSWER_REVEALED when:
-
-- The student says they don't know.
-- The student says they are stuck.
-- The student asks for the answer directly.
-- The student asks you to solve it.
-- The student clearly cannot continue after several attempts.
-- The student has made several unsuccessful attempts.
-- The student explicitly requested the final answer (answer mode).
+- The student clicked the Answer button.
+- The turn instruction explicitly requests the final answer.
 
 When using ANSWER_REVEALED:
 
-- Give the correct final answer immediately.
-- Give a short step-by-step explanation.
-- End with an encouraging sentence.
-- DO NOT ask another question.
+- Give the correct answer.
+- Give a short explanation.
+- Do not ask another question.
+- End with encouragement.
+- STOP.
 
-Example:
 
-ANSWER_REVEALED
-The fourth test score is 100.
+==================================================
+IMPORTANT
+==================================================
 
-First, add the three known scores:
-70 + 80 + 90 = 240.
+A wrong answer does NOT automatically mean the answer should be revealed.
 
-Then subtract from the target:
-340 - 240 = 100.
+If the student has fewer than 3 wrong attempts:
 
-You were close — now you can see how the missing value is found.
+→ Use GUIDING.
 
------------------------------------
-WHEN TO USE GUIDING
------------------------------------
+If the student reaches 3 wrong attempts:
 
-Use GUIDING when the student has not solved the problem yet but is making
-reasonable progress, or when providing hint-mode learning support.
+→ Do NOT reveal the answer.
 
-When using GUIDING in normal Socratic mode:
+Instead, the server will handle the recommendation to use Hint or Answer.
 
-- Give ONE useful guiding question.
-- Do not reveal the final answer.
-- Help the student take the next logical step.
-- Do not repeat a question that was already asked.
-- Keep the response concise.
+Do not ask another Socratic question after the third wrong attempt.
 
-Example:
 
-GUIDING
-You're on the right track. What do you get if you add 70, 80, and 90 together?
+==================================================
+STYLE
+==================================================
 
------------------------------------
-GENERAL RULES
------------------------------------
+Be friendly and encouraging.
 
-1. Be friendly and encouraging.
-2. Never shame or criticize the student.
-3. Be concise.
-4. Build on the previous conversation.
-5. Do not repeat previous questions.
-6. Do not use Markdown.
-7. Do not use LaTeX.
-8. Do not use headings.
-9. Do not use backticks.
-10. Do not use bullet points.
-11. Do not give unnecessary explanations.
-12. Once the student has correctly solved the problem, STOP asking questions.
-13. If the student clearly does not know the answer, reveal it immediately.
-14. Never force the student to answer many repetitive questions.
-15. Always use one of the three required labels.
+Be concise.
+
+Never shame the student.
+
+Build on previous answers.
+
+Do not repeat questions.
+
+Do not use Markdown.
+
+Do not use LaTeX.
+
+Do not use headings.
+
+Do not use bullet points.
+
+Do not use backticks.
+
+Always begin with exactly one response label.
 `;
 
+
+// ==================================================
+// SESSION STORE
+// ==================================================
+
+const sessions = new Map();
+
+
+function createSession(sessionId) {
+
+    sessions.set(sessionId, {
+        stage: "START",
+        attempts: 0,
+        completed: false
+    });
+
+}
+
+
+function getSession(sessionId) {
+
+    if (!sessions.has(sessionId)) {
+        createSession(sessionId);
+    }
+
+    return sessions.get(sessionId);
+
+}
+
+
+function resetSession(sessionId) {
+
+    createSession(sessionId);
+
+}
+
+
+// ==================================================
+// API
+// ==================================================
 
 app.post("/api/ask", async (req, res) => {
 
@@ -136,29 +218,77 @@ app.post("/api/ask", async (req, res) => {
             type,
             problem,
             studentResponse,
-            history
+            history,
+            sessionId
         } = req.body;
 
+
+        // ==================================================
+        // VALIDATION
+        // ==================================================
+
+        if (!type) {
+
+            return res.status(400).json({
+                error: "Missing type."
+            });
+
+        }
+
+
+        if (!problem) {
+
+            return res.status(400).json({
+                error: "Missing problem."
+            });
+
+        }
+
+
+        if (!sessionId) {
+
+            return res.status(400).json({
+                error: "Missing sessionId."
+            });
+
+        }
+
+
+        const session = getSession(sessionId);
 
         let turnInstruction = "";
 
 
-        // -----------------------------------------
-        // START
-        // -----------------------------------------
+        // ==================================================
+        // STAGE 1: START
+        // ==================================================
 
         if (type === "start") {
 
+            resetSession(sessionId);
+
+            const newSession = getSession(sessionId);
+
+            newSession.stage = "GUIDE";
+            newSession.attempts = 0;
+            newSession.completed = false;
+
+
             turnInstruction = `
-Here is the student's problem:
+The student is starting a new problem.
+
+Problem:
 
 ${problem}
 
-Start the tutoring session.
+This is the START stage.
 
-Ask ONE useful and simple guiding question.
+Begin the tutoring process.
 
-The student has not answered anything yet, so do not reveal the final answer.
+Ask ONE simple Socratic question that helps the student
+begin thinking about the problem.
+
+Do NOT reveal the answer.
 
 Your response MUST begin with:
 
@@ -168,147 +298,197 @@ GUIDING
         }
 
 
-        // -----------------------------------------
-        // STUDENT SUBMITS ANSWER
-        // -----------------------------------------
+        // ==================================================
+        // STAGE 3: STUDENT ANSWERS
+        // ==================================================
 
         else if (type === "submit") {
 
+            if (
+                studentResponse === undefined ||
+                studentResponse === null ||
+                String(studentResponse).trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    error: "Missing studentResponse."
+                });
+
+            }
+
+
+            const currentAttempt = session.attempts + 1;
+
+
+            /*
+            ----------------------------------------------
+            STUDENT ANSWER EVALUATION
+            ----------------------------------------------
+            */
+
             turnInstruction = `
+The student is currently in the STUDENT ANSWERS stage.
+
 Problem:
 
 ${problem}
 
-Student's latest response:
+Student's latest answer:
 
 ${studentResponse}
 
-Evaluate the student's latest response carefully.
+Previous conversation:
 
-Determine whether the student:
+${JSON.stringify(history || [])}
 
-A) Correctly solved the problem.
-B) Is making progress but has not solved it yet.
-C) Is stuck, says they don't know, asks for the answer, or has made several unsuccessful attempts.
+This is wrong-answer attempt number:
+
+${currentAttempt}
+
+The maximum number of wrong attempts is:
+
+${MAX_WRONG_ATTEMPTS}
+
+
+Evaluate the student's latest answer carefully.
+
 
 IMPORTANT:
 
-If A:
+FIRST determine whether the student's answer is correct.
+
+
+IF THE ANSWER IS CORRECT:
+
 Use EXCELLENT_WORK.
-Congratulate the student.
+
+The student has successfully solved the problem.
+
 State the correct answer.
+
 Give one short explanation.
-DO NOT ask another question.
 
-If B:
+Do NOT ask another question.
+
+STOP.
+
+
+IF THE ANSWER IS WRONG AND THE ATTEMPT COUNT IS LESS THAN 3:
+
 Use GUIDING.
-Ask ONE useful guiding question.
-Do not reveal the final answer.
 
-If C:
-Use ANSWER_REVEALED.
-Give the correct answer immediately.
-Give a short explanation.
-DO NOT ask another question.
+Do NOT reveal the final answer.
 
-Your response MUST begin with exactly one of:
+Briefly explain what part of the student's reasoning needs
+correction.
 
-EXCELLENT_WORK
-ANSWER_REVEALED
-GUIDING
-`;
+Ask ONE useful Socratic question.
 
-        }
+Help the student try again.
+
+Do not repeat a previous question.
 
 
-        // -----------------------------------------
-        // HINT
-        // -----------------------------------------
+IF THE ANSWER IS WRONG AND THE ATTEMPT COUNT IS 3 OR MORE:
 
-        else if (type === "hint") {
+Use GUIDING.
 
-            turnInstruction = `
-Problem:
+Do NOT reveal the final answer.
 
-${problem}
+Do NOT ask another Socratic question.
 
-The student clicked "I'm stuck" and needs additional learning support.
+The student should be encouraged to use either:
 
-IMPORTANT:
-Do NOT ask the student another question.
-
-Instead, provide a rich but concise learning resource that helps the student
-understand how to approach the problem.
-
-Your response should:
-
-1. Explain the key concept needed to solve the problem in simple language.
-
-2. Explain the general strategy or method for approaching this type of problem.
-
-3. Give a small, related example that is NOT exactly the same as the student's
-problem.
-
-4. Explain one common mistake students might make.
-
-5. Give one useful practical tip for remembering or applying the concept.
-
-6. If appropriate, mention useful learning resources or source types the
-student could explore, such as a textbook topic, Khan Academy topic,
-educational article, or other reliable educational material.
-
-7. Do NOT ask a guiding question.
-
-8. Do NOT unnecessarily reveal the final answer to the student's exact problem
-unless the conversation clearly shows that the student cannot continue or
-has already made several unsuccessful attempts.
-
-9. If the student clearly needs the exact answer, use ANSWER_REVEALED and give
-the answer with a short step-by-step explanation.
-
-10. Otherwise use GUIDING, but in this special hint mode, GUIDING means giving
-learning guidance and resources rather than asking a question.
-
-Keep the explanation useful, clear, and reasonably concise.
-
-Your response MUST begin with exactly one of:
-
-GUIDING
+Hint
 
 or
 
+Answer
+
+The application will display these options separately.
+
+Your response should communicate that it is okay to use Hint
+for additional guidance or Answer to see the complete solution.
+
+
+Your response MUST begin with exactly one of:
+
+GUIDING
+EXCELLENT_WORK
 ANSWER_REVEALED
 `;
 
         }
 
 
-        // -----------------------------------------
-        // ANSWER (explicit "Answer" button)
-        // -----------------------------------------
+        // ==================================================
+        // HINT
+        // ==================================================
 
-        else if (type === "answer") {
+        else if (type === "hint") {
+
+            session.stage = "GUIDE";
+
 
             turnInstruction = `
+The student clicked the Hint button.
+
 Problem:
 
 ${problem}
 
-The student explicitly clicked the "Answer" button and is asking for the
-final answer right now.
+The student needs additional guidance.
 
-IMPORTANT:
+Give useful conceptual help that allows the student to continue
+solving the problem.
 
-- Do NOT resist the request.
-- Do NOT say "try one more time" or anything similar.
-- Do NOT ask another question.
-- Do NOT continue Socratic questioning.
+Do NOT immediately reveal the exact final answer.
 
-Reveal the correct final answer immediately, with a short step-by-step
-explanation of why it is correct, followed by one short encouraging
-closing sentence.
+Explain the key concept or strategy.
 
-Your response MUST begin with exactly:
+Give ONE useful hint.
+
+Do not ask multiple questions.
+
+The purpose of this response is to move the student back
+into the GUIDE stage.
+
+Your response MUST begin with:
+
+GUIDING
+`;
+
+        }
+
+
+        // ==================================================
+        // ANSWER
+        // ==================================================
+
+        else if (type === "answer") {
+
+            session.stage = "REVEAL";
+            session.completed = true;
+
+
+            turnInstruction = `
+The student clicked the Answer button.
+
+Problem:
+
+${problem}
+
+The student explicitly requested the final answer.
+
+Reveal the correct answer immediately.
+
+Give a short explanation of the reasoning.
+
+Do NOT ask another question.
+
+End with a short encouraging sentence.
+
+Your response MUST begin with:
 
 ANSWER_REVEALED
 `;
@@ -316,20 +496,37 @@ ANSWER_REVEALED
         }
 
 
-        // -----------------------------------------
-        // CONVERSATION HISTORY
-        // -----------------------------------------
+        // ==================================================
+        // UNKNOWN TYPE
+        // ==================================================
+
+        else {
+
+            return res.status(400).json({
+                error: `Unknown type: ${type}`
+            });
+
+        }
+
+
+        // ==================================================
+        // HISTORY
+        // ==================================================
 
         const messages = [
 
             ...(Array.isArray(history) ? history : [])
-                .slice(-8)
+                .slice(-10)
                 .map((turn) => ({
-                    role: turn.role === "assistant"
-                        ? "assistant"
-                        : "user",
 
-                    content: String(turn.text ?? "")
+                    role:
+                        turn.role === "assistant"
+                            ? "assistant"
+                            : "user",
+
+                    content:
+                        String(turn.text ?? "")
+
                 })),
 
             {
@@ -340,22 +537,26 @@ ANSWER_REVEALED
         ];
 
 
-        // -----------------------------------------
+        // ==================================================
         // CLAUDE API
-        // -----------------------------------------
+        // ==================================================
 
         const response = await anthropic.messages.create({
 
-            model: "claude-haiku-4-5",
+            model: MODEL,
 
-            max_tokens: 300,
+            max_tokens: MAX_TOKENS,
 
             system: SYSTEM_PROMPT,
 
-            messages: messages
+            messages
 
         });
 
+
+        // ==================================================
+        // GET TEXT
+        // ==================================================
 
         const answer = response.content
             .filter(block => block.type === "text")
@@ -364,20 +565,131 @@ ANSWER_REVEALED
             .trim();
 
 
-        console.log("Claude response:", answer);
+        // ==================================================
+        // UPDATE STATE
+        // ==================================================
 
+        if (type === "submit") {
+
+            /*
+            ----------------------------------------------
+            CORRECT
+            ----------------------------------------------
+            */
+
+            if (answer.startsWith("EXCELLENT_WORK")) {
+
+                session.stage = "REVIEW";
+
+                session.completed = true;
+
+                session.attempts = 0;
+
+            }
+
+
+            /*
+            ----------------------------------------------
+            WRONG
+            ----------------------------------------------
+            */
+
+            else if (answer.startsWith("GUIDING")) {
+
+                session.attempts += 1;
+
+
+                if (
+                    session.attempts >= MAX_WRONG_ATTEMPTS
+                ) {
+
+                    session.stage = "SUPPORT";
+
+                }
+
+                else {
+
+                    session.stage = "GUIDE";
+
+                }
+
+            }
+
+
+            /*
+            ----------------------------------------------
+            ANSWER REVEALED
+            ----------------------------------------------
+            */
+
+            else if (
+                answer.startsWith("ANSWER_REVEALED")
+            ) {
+
+                session.stage = "REVEAL";
+
+                session.completed = true;
+
+                session.attempts = 0;
+
+            }
+
+        }
+
+
+        // ==================================================
+        // LOG
+        // ==================================================
+
+        console.log(
+            `[${sessionId}]`,
+            `stage=${session.stage}`,
+            `attempts=${session.attempts}`,
+            `type=${type}`
+        );
+
+        console.log(
+            "Claude:",
+            answer
+        );
+
+
+        // ==================================================
+        // RESPONSE
+        // ==================================================
 
         res.json({
-            answer
+
+            answer,
+
+            stage: session.stage,
+
+            attempts: session.attempts,
+
+            completed: session.completed,
+
+            showHintButton:
+                session.stage === "SUPPORT",
+
+            showAnswerButton:
+                session.stage === "SUPPORT"
+
         });
 
 
-    } catch (error) {
+    }
 
-        console.error("Claude API error:", error);
+    catch (error) {
+
+        console.error(
+            "Claude API error:",
+            error
+        );
 
         res.status(500).json({
+
             error: "AI request failed."
+
         });
 
     }
@@ -385,10 +697,33 @@ ANSWER_REVEALED
 });
 
 
-app.listen(3000, () => {
+// ==================================================
+// HEALTH CHECK
+// ==================================================
+
+app.get("/health", (req, res) => {
+
+    res.json({
+
+        ok: true,
+
+        model: MODEL
+
+    });
+
+});
+
+
+// ==================================================
+// SERVER
+// ==================================================
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
 
     console.log(
-        "Claude Socratic AI Tutor running on http://localhost:3000"
+        `Claude Socratic AI Tutor running on http://localhost:${PORT}`
     );
 
 });
