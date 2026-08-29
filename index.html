@@ -3,10 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="A Socratic AI tutor that guides you to the answer with questions instead of handing it to you.">
+    <meta name="color-scheme" content="dark light">
 
     <title>Socratic AI Tutor</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="style.css">
 
     <script>
@@ -23,7 +27,7 @@
 <body>
 
     <!-- Animated background -->
-    <div class="background">
+    <div class="background" aria-hidden="true">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
@@ -35,7 +39,7 @@
         <header class="header">
 
             <div class="logo">
-                <div class="logo-icon">
+                <div class="logo-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" />
                         <path d="M20 2v4" />
@@ -52,8 +56,8 @@
 
             <div class="header-actions">
 
-                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle light and dark mode">
-                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button type="button" class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Switch between light and dark mode">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="4" />
                         <path d="M12 2v2" />
                         <path d="M12 20v2" />
@@ -64,13 +68,13 @@
                         <path d="m6.34 17.66-1.41 1.41" />
                         <path d="m19.07 4.93-1.41 1.41" />
                     </svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
                     </svg>
                 </button>
 
-                <button class="new-problem-button" id="newProblemButton" onclick="confirmNewProblem()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button type="button" class="new-problem-button" id="newProblemButton" onclick="confirmNewProblem()" aria-label="Start a new problem">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
                         <path d="M3 3v5h5" />
                     </svg>
@@ -86,58 +90,59 @@
         <!-- not three separate floating cards.                            -->
         <main class="learning-panel">
 
-            <!-- Sticky 5-stage progress (top strip of the panel) -->
-            <nav class="stage-bar" id="stageBar" aria-label="Learning progress">
+            <!-- 5-stage progress. An ordered list, not a nav: the stages -->
+            <!-- report progress, they are not destinations you can go to. -->
+            <ol class="stage-bar" id="stageBar" aria-label="Learning progress">
 
-                <div class="stage-item" data-stage="0">
-                    <div class="stage-node">
+                <li class="stage-item" data-stage="0">
+                    <div class="stage-node" aria-hidden="true">
                         <span class="stage-number">01</span>
                         <svg class="stage-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                     </div>
                     <span class="stage-name">Understand</span>
-                </div>
+                </li>
 
-                <div class="stage-connector"><span></span></div>
+                <li class="stage-connector" aria-hidden="true"><span></span></li>
 
-                <div class="stage-item" data-stage="1">
-                    <div class="stage-node">
+                <li class="stage-item" data-stage="1">
+                    <div class="stage-node" aria-hidden="true">
                         <span class="stage-number">02</span>
                         <svg class="stage-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                     </div>
                     <span class="stage-name">Explore</span>
-                </div>
+                </li>
 
-                <div class="stage-connector"><span></span></div>
+                <li class="stage-connector" aria-hidden="true"><span></span></li>
 
-                <div class="stage-item" data-stage="2">
-                    <div class="stage-node">
+                <li class="stage-item" data-stage="2">
+                    <div class="stage-node" aria-hidden="true">
                         <span class="stage-number">03</span>
                         <svg class="stage-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                     </div>
                     <span class="stage-name">Reason</span>
-                </div>
+                </li>
 
-                <div class="stage-connector"><span></span></div>
+                <li class="stage-connector" aria-hidden="true"><span></span></li>
 
-                <div class="stage-item" data-stage="3">
-                    <div class="stage-node">
+                <li class="stage-item" data-stage="3">
+                    <div class="stage-node" aria-hidden="true">
                         <span class="stage-number">04</span>
                         <svg class="stage-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                     </div>
                     <span class="stage-name">Refine</span>
-                </div>
+                </li>
 
-                <div class="stage-connector"><span></span></div>
+                <li class="stage-connector" aria-hidden="true"><span></span></li>
 
-                <div class="stage-item" data-stage="4">
-                    <div class="stage-node">
+                <li class="stage-item" data-stage="4">
+                    <div class="stage-node" aria-hidden="true">
                         <span class="stage-number">05</span>
                         <svg class="stage-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                     </div>
                     <span class="stage-name">Insight</span>
-                </div>
+                </li>
 
-            </nav>
+            </ol>
 
             <!-- Chat scroll region (middle of the same panel) -->
             <div class="chat-area">
@@ -147,24 +152,25 @@
                     <!-- Empty state / problem starter -->
                     <div class="starter" id="starter">
 
-                        <div class="starter-badge">
+                        <div class="starter-badge" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="10" />
                                 <path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" />
                             </svg>
                         </div>
 
-                        <h2>What are you trying to figure out?</h2>
+                        <h2 id="starterHeading">What are you trying to figure out?</h2>
                         <p>Bring a problem, and I'll guide you to the answer with questions&nbsp;— not hand it to you.</p>
 
                         <div class="starter-input-wrapper">
-                            <textarea id="problem" rows="3" placeholder="Example: A car accelerates from 0 to 20 m/s in 5 seconds. Find the acceleration."></textarea>
+                            <label class="sr-only" for="problem">Describe the problem you want help thinking through</label>
+                            <textarea id="problem" rows="3" autocomplete="off" aria-describedby="problemCount" placeholder="Example: A car accelerates from 0 to 20 m/s in 5 seconds. Find the acceleration."></textarea>
 
                             <div class="starter-input-footer">
                                 <span id="problemCount">0 characters</span>
-                                <button class="primary-button" id="startButton" onclick="startLearning()">
+                                <button type="button" class="primary-button" id="startButton" onclick="startLearning()">
                                     <span>Start Learning</span>
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M5 12h14" />
                                         <path d="m12 5 7 7-7 7" />
                                     </svg>
@@ -175,14 +181,14 @@
                     </div>
 
                     <!-- Messages get appended here -->
-                    <div class="messages" id="messages"></div>
+                    <div class="messages" id="messages" role="log" aria-live="polite" aria-relevant="additions" aria-label="Tutoring conversation"></div>
 
                 </div>
             </div>
 
             <!-- New message pill -->
-            <button class="new-message-pill" id="newMessagePill" onclick="scrollChatToBottom(true)" hidden>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg>
+            <button type="button" class="new-message-pill" id="newMessagePill" onclick="scrollChatToBottom(true)" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg>
                 New message
             </button>
             </div>
@@ -193,34 +199,35 @@
                 <div class="composer-inner">
 
                     <div class="composer-box">
-                        <textarea id="studentResponse" rows="1" placeholder="Explain your reasoning..."></textarea>
+                        <label class="sr-only" for="studentResponse">Your reasoning</label>
+                        <textarea id="studentResponse" rows="1" autocomplete="off" aria-describedby="composerHint" placeholder="Explain your reasoning..."></textarea>
                     </div>
 
                     <div class="composer-actions">
 
                         <div class="composer-actions-left">
-                            <button class="stuck-button" id="stuckButton" onclick="getHint()">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <button type="button" class="stuck-button" id="stuckButton" onclick="getHint()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
                                     <path d="M9 18h6" />
                                     <path d="M10 22h4" />
                                 </svg>
-                                I'm Stuck
+                                <span>I'm Stuck</span>
                             </button>
 
-                            <button class="answer-button" id="answerButton" onclick="revealAnswer()">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <button type="button" class="answer-button" id="answerButton" onclick="revealAnswer()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M12 17h.01" />
                                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
                                     <circle cx="12" cy="12" r="10" />
                                 </svg>
-                                Answer
+                                <span>Answer</span>
                             </button>
                         </div>
 
-                        <button class="send-button" id="sendButton" onclick="submitAnswer()">
+                        <button type="button" class="send-button" id="sendButton" onclick="submitAnswer()">
                             Send
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
                                 <path d="m21.854 2.147-10.94 10.939" />
                             </svg>
@@ -228,7 +235,7 @@
 
                     </div>
 
-                    <div class="composer-hint">
+                    <div class="composer-hint" id="composerHint">
                         <span id="responseCount">0 characters</span>
                         <span class="composer-shortcut">⌘/Ctrl + Enter to send</span>
                     </div>

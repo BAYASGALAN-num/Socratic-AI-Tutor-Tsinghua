@@ -1,11 +1,20 @@
 const STAGE_LABELS = ["Understand", "Explore", "Reason", "Refine", "Insight"];
 
+/* One icon language for the whole app: 24x24 viewBox, 2px round
+   strokes. Sizing is left to CSS so the same markup works at any
+   scale. Filled variants exist only where a shape has to read at
+   very small sizes. */
 const ICONS = {
-    question: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>`,
-    bulb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5 1 .7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
-    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-11-5"/></svg>`,
-    ai: "✦",
-    student: "You"
+    question: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>`,
+    bulb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5 1 .7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
+    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`,
+    book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>`,
+    alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
+    student: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+
+    /* Filled — these render at 11-24px, where a 2px stroke closes up. */
+    ai: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>`,
+    sparkle: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>`
 };
 
 
@@ -186,6 +195,13 @@ function renderStage() {
             "done",
             i < stage
         );
+
+        /* Tell screen readers which step of the five we are on. */
+        if (i === stage) {
+            el.setAttribute("aria-current", "step");
+        } else {
+            el.removeAttribute("aria-current");
+        }
     });
 }
 
@@ -264,9 +280,7 @@ function renderUserMessage(text) {
 
             <span class="msg-label">You</span>
 
-            <div class="msg-bubble">
-                ${escapeHtml(text)}
-            </div>
+            <div class="msg-bubble">${escapeHtml(text)}</div>
 
         </div>
     `;
@@ -288,15 +302,13 @@ function renderProblemMessage(text) {
     el.className = "msg problem";
 
     el.innerHTML = `
-        <div class="msg-avatar">📘</div>
+        <div class="msg-avatar">${ICONS.book}</div>
 
         <div class="msg-body">
 
             <span class="msg-label">Your problem</span>
 
-            <div class="msg-bubble">
-                ${escapeHtml(text)}
-            </div>
+            <div class="msg-bubble">${escapeHtml(text)}</div>
 
         </div>
     `;
@@ -324,9 +336,7 @@ function renderAIMessage(text) {
 
             <span class="msg-label">Socratic AI</span>
 
-            <div class="msg-bubble">
-                ${escapeHtml(text)}
-            </div>
+            <div class="msg-bubble">${escapeHtml(text)}</div>
 
         </div>
     `;
@@ -361,13 +371,9 @@ function renderSocraticQuestion(text) {
                     SOCRATIC QUESTION
                 </div>
 
-                <div class="socratic-question-text">
-                    ${escapeHtml(text)}
-                </div>
+                <div class="socratic-question-text">${escapeHtml(text)}</div>
 
-                <div class="socratic-subtext">
-                    Think before you answer.
-                </div>
+                <div class="socratic-subtext">Think before you answer.</div>
 
             </div>
 
@@ -404,9 +410,7 @@ function renderHintCard(text) {
                     HINT
                 </div>
 
-                <div class="hint-text">
-                    ${escapeHtml(text)}
-                </div>
+                <div class="hint-text">${escapeHtml(text)}</div>
 
             </div>
 
@@ -432,7 +436,7 @@ function renderAnswerCard(text) {
     el.innerHTML = `
         <div class="msg-avatar">${ICONS.ai}</div>
 
-        <div class="msg-body" style="max-width: 100%;">
+        <div class="msg-body msg-body-wide">
 
             <span class="msg-label">Socratic AI</span>
 
@@ -440,9 +444,7 @@ function renderAnswerCard(text) {
 
                 <div class="answer-header">
 
-                    <span class="answer-icon">
-                        ${ICONS.check}
-                    </span>
+                    <span class="answer-icon">${ICONS.check}</span>
 
                     <span class="answer-title">
                         ANSWER REVEALED
@@ -450,9 +452,7 @@ function renderAnswerCard(text) {
 
                 </div>
 
-                <div class="answer-text">
-                    ${escapeHtml(text)}
-                </div>
+                <div class="answer-text">${escapeHtml(text)}</div>
 
             </div>
 
@@ -476,18 +476,17 @@ function renderSuccessCard(text) {
     el.className = "success-card";
 
     el.innerHTML = `
-        <div class="success-icon">✓</div>
+        <div class="success-icon">${ICONS.check}</div>
 
         <div class="success-title">
             EXCELLENT WORK!
         </div>
 
-        <div class="success-message">
-            ${escapeHtml(text)}
-        </div>
+        <div class="success-message">${escapeHtml(text)}</div>
 
         <div class="success-subtitle">
-            🎉 You solved this through your own reasoning.
+            ${ICONS.sparkle}
+            <span>You solved this through your own reasoning.</span>
         </div>
     `;
 
@@ -558,6 +557,7 @@ function renderNewProblemCTA() {
         <p>Ready for another challenge?</p>
 
         <button
+            type="button"
             class="primary-button"
             onclick="resetSession()"
         >
@@ -596,7 +596,7 @@ function renderErrorMessage(text) {
     el.className = "msg error";
 
     el.innerHTML = `
-        <div class="msg-avatar">!</div>
+        <div class="msg-avatar">${ICONS.alert}</div>
 
         <div class="msg-body">
 
@@ -604,9 +604,7 @@ function renderErrorMessage(text) {
                 Socratic AI
             </span>
 
-            <div class="msg-bubble">
-                ${escapeHtml(text)}
-            </div>
+            <div class="msg-bubble">${escapeHtml(text)}</div>
 
         </div>
     `;
@@ -628,9 +626,7 @@ function showTypingIndicator(label) {
     el.className = "msg ai typing";
 
     el.innerHTML = `
-        <div class="msg-avatar">
-            ${ICONS.ai}
-        </div>
+        <div class="msg-avatar">${ICONS.ai}</div>
 
         <div class="msg-body">
 
@@ -646,9 +642,7 @@ function showTypingIndicator(label) {
                     <span></span>
                 </span>
 
-                <span class="thinking-label">
-                    ${escapeHtml(label)}
-                </span>
+                <span class="thinking-label">${escapeHtml(label)}</span>
 
             </div>
 
@@ -750,7 +744,7 @@ function launchSparkles() {
 
         spark.className = "sparkle";
 
-        spark.textContent = "✦";
+        spark.innerHTML = ICONS.sparkle;
 
         const angle =
             (360 / count) * i +
